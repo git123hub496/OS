@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mac OS Clone</title>
+<style>
+  /* Basic reset */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height:100vh; overflow:hidden; background: #007aff; }
+
+  /* Desktop background */
+  .desktop {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: url('https://i.imgur.com/7xFfQST.jpg') no-repeat center center/cover;
+  }
+
+  /* Dock */
+  .dock {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.1);
+    padding: 10px 20px;
+    border-radius: 20px;
+    display: flex;
+    gap: 20px;
+    backdrop-filter: blur(10px);
+  }
+
+  .dock img {
+    width: 60px;
+    transition: transform 0.2s;
+    cursor: pointer;
+  }
+  .dock img:hover { transform: scale(1.3); }
+
+  /* Window */
+  .window {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    width: 400px;
+    height: 300px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 10px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .window-header {
+    background: #f2f2f2;
+    padding: 5px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .window-header .btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .close { background: #ff5f57; cursor:pointer; }
+  .min { background: #ffbd2e; }
+  .max { background: #28c840; }
+
+  .window-content {
+    flex: 1;
+    padding: 10px;
+    overflow: auto;
+  }
+
+</style>
+</head>
+<body>
+<div class="desktop">
+  <div class="dock">
+    <img src="https://img.icons8.com/ios-filled/100/ffffff/finder.png" id="finder-icon" title="Finder">
+    <img src="https://img.icons8.com/ios-filled/100/ffffff/safari.png" id="safari-icon" title="Safari">
+  </div>
+
+  <!-- Finder window -->
+  <div class="window" id="finder-window">
+    <div class="window-header">
+      <div class="btn close" onclick="closeWindow('finder-window')"></div>
+      <div class="btn min"></div>
+      <div class="btn max"></div>
+      <span>Finder</span>
+    </div>
+    <div class="window-content">
+      <p>Welcome to Mac OS Clone!</p>
+      <p>You can drag & drop, add files, and more in a real version.</p>
+    </div>
+  </div>
+
+  <!-- Safari window -->
+  <div class="window" id="safari-window">
+    <div class="window-header">
+      <div class="btn close" onclick="closeWindow('safari-window')"></div>
+      <div class="btn min"></div>
+      <div class="btn max"></div>
+      <span>Safari</span>
+    </div>
+    <div class="window-content">
+      <p>This is a simulated Safari browser window!</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Open windows when clicking dock icons
+  document.getElementById('finder-icon').addEventListener('click', () => {
+    openWindow('finder-window');
+  });
+  document.getElementById('safari-icon').addEventListener('click', () => {
+    openWindow('safari-window');
+  });
+
+  function openWindow(id){
+    const win = document.getElementById(id);
+    win.style.display = 'flex';
+  }
+
+  function closeWindow(id){
+    const win = document.getElementById(id);
+    win.style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
