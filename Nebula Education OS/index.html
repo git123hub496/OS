@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nebula Education OS</title>
+
   <style>
     :root{
+      /* defaults (will be overridden by themes) */
       --bg1:#050712;
       --bg2:#0a1230;
       --glass: rgba(255,255,255,.08);
@@ -20,6 +22,9 @@
       --bad:#ff4d6d;
       --shadow: 0 18px 60px rgba(0,0,0,.45);
       --radius: 18px;
+      --wallpaper: radial-gradient(1200px 700px at 20% 15%, rgba(124,92,255,.25), transparent 60%),
+                   radial-gradient(900px 600px at 80% 70%, rgba(0,229,255,.18), transparent 55%),
+                   linear-gradient(160deg, var(--bg1), var(--bg2));
     }
 
     *{box-sizing:border-box}
@@ -27,15 +32,12 @@
     body{
       color:var(--text);
       overflow:hidden;
-      background:
-        radial-gradient(1200px 700px at 20% 15%, rgba(124,92,255,.25), transparent 60%),
-        radial-gradient(900px 600px at 80% 70%, rgba(0,229,255,.18), transparent 55%),
-        linear-gradient(160deg, var(--bg1), var(--bg2));
+      background: var(--wallpaper);
     }
 
-    /* stars */
+    /* stars overlay */
     .stars{
-      position:fixed; inset:0; pointer-events:none; opacity:.6;
+      position:fixed; inset:0; pointer-events:none; opacity:.55;
       background-image:
         radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,.6), transparent 60%),
         radial-gradient(1px 1px at 120px 80px, rgba(255,255,255,.55), transparent 60%),
@@ -63,7 +65,7 @@
       display:grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap:14px;
-      max-width:620px;
+      max-width:640px;
       padding-top:8px;
     }
 
@@ -98,7 +100,7 @@
     /* taskbar */
     #taskbar{
       position:fixed; left:50%; bottom:14px; transform:translateX(-50%);
-      width:min(1000px, calc(100% - 26px));
+      width:min(1050px, calc(100% - 26px));
       border:1px solid var(--stroke);
       border-radius: 22px;
       padding:10px 12px;
@@ -128,9 +130,10 @@
     /* windows */
     .window{
       position:absolute;
-      width: min(920px, calc(100% - 40px));
-      height: min(620px, calc(100% - 120px));
-      left:50%; top:50%; transform:translate(-50%,-50%);
+      width: 860px;
+      height: 560px;
+      left:50%; top:50%;
+      transform:translate(-50%,-50%);
       border-radius: var(--radius);
       border:1px solid var(--stroke);
       background: rgba(10,16,40,.55);
@@ -138,6 +141,10 @@
       box-shadow: var(--shadow);
       overflow:hidden;
       display:none;
+      min-width: 360px;
+      min-height: 260px;
+      resize: both;            /* ✅ resizable */
+      overflow: auto;          /* needed for resize */
     }
     .window.active{display:block;}
     .titlebar{
@@ -147,6 +154,9 @@
       background: rgba(0,0,0,.22);
       border-bottom:1px solid rgba(255,255,255,.10);
       cursor:grab;
+      position: sticky;
+      top:0;
+      z-index:5;
     }
     .titlebar:active{cursor:grabbing}
     .title-left{display:flex;align-items:center;gap:10px}
@@ -175,7 +185,6 @@
       display:flex;
     }
 
-    /* sidebar */
     .sidebar{
       width:260px;
       border-right:1px solid rgba(255,255,255,.10);
@@ -276,7 +285,7 @@
       left:50%;
       bottom:76px;
       transform:translateX(-50%);
-      width:min(900px, calc(100% - 26px));
+      width:min(950px, calc(100% - 26px));
       border-radius:22px;
       border:1px solid var(--stroke);
       background: rgba(0,0,0,.30);
@@ -308,6 +317,10 @@
     .appTile:hover{transform: translateY(-1px); background: rgba(255,255,255,.10)}
     .appTile .t{font-weight:900}
     .appTile .s{font-size:12px;color:var(--muted);margin-top:2px}
+
+    /* focus mode visual */
+    body.focus #desktop .icon .desc { opacity:.85; }
+    body.focus #taskbar { border-color: rgba(45,255,136,.25); }
   </style>
 </head>
 
@@ -320,7 +333,7 @@
         <div class="badge">N</div>
         <div>
           <div class="name">Nebula Browser</div>
-          <div class="desc">Study-safe browsing</div>
+          <div class="desc">Education browsing</div>
         </div>
       </div>
 
@@ -352,7 +365,7 @@
         <div class="badge">⚙</div>
         <div>
           <div class="name">Settings</div>
-          <div class="desc">Customize Nebula</div>
+          <div class="desc">Themes + wallpaper</div>
         </div>
       </div>
 
@@ -390,7 +403,7 @@
           </div>
           <div class="appTile" onclick="openApp('settings')">
             <div class="t">Settings</div>
-            <div class="s">Themes + options</div>
+            <div class="s">Customize OS</div>
           </div>
           <div class="appTile" onclick="openApp('about')">
             <div class="t">About</div>
@@ -400,11 +413,11 @@
       </div>
       <div class="card">
         <h4>Quick Actions</h4>
-        <p class="small">School mode, focus, and shortcuts.</p>
+        <p class="small">Customization + focus.</p>
         <div class="hr"></div>
         <button class="ghost" onclick="toggleFocus()">Toggle Focus Mode</button>
         <div style="height:10px"></div>
-        <button class="ghost" onclick="setBrowserHome()">Set Browser Home</button>
+        <button class="ghost" onclick="resetOS()">Reset OS</button>
       </div>
     </div>
   </div>
@@ -441,7 +454,7 @@
         <div class="appdot">N</div>
         <div class="title">
           <h3>Nebula Browser</h3>
-          <div class="sub">Education mode browsing</div>
+          <div class="sub">Education browsing</div>
         </div>
       </div>
       <div class="win-controls">
@@ -452,23 +465,24 @@
     <div class="content">
       <div class="sidebar">
         <div class="card">
-          <h4>Safe Study Links</h4>
-          <p>Quick launch school-friendly sites.</p>
+          <h4>Study Links</h4>
+          <p>Iframe-friendly sites.</p>
         </div>
-        <button class="ghost" onclick="browse('https://www.khanacademy.org')">Khan Academy</button>
         <button class="ghost" onclick="browse('https://en.wikipedia.org')">Wikipedia</button>
-        <button class="ghost" onclick="browse('https://www.duckduckgo.com')">DuckDuckGo</button>
-        <button class="ghost" onclick="browse('https://www.britannica.com')">Britannica</button>
-        <button class="ghost" onclick="browse(getHome())">Home Page</button>
+        <button class="ghost" onclick="browse('https://simple.wikipedia.org')">Simple Wikipedia</button>
+        <button class="ghost" onclick="browse('https://www.wikibooks.org')">Wikibooks</button>
+        <button class="ghost" onclick="browse('https://en.wiktionary.org')">Wiktionary</button>
+        <button class="ghost" onclick="browse('https://openlibrary.org')">Open Library</button>
+        <button class="ghost" onclick="browse('https://archive.org')">Archive.org</button>
         <div class="hr"></div>
         <div class="card">
           <h4>Tip</h4>
-          <p>Some websites block loading inside an iframe. If it’s blank, try another site.</p>
+          <p>Some sites still block iframe. If blank, try another.</p>
         </div>
       </div>
       <div class="main">
         <div class="notice">
-          ⚠️ Some websites do not allow iframe viewing (security rule). This browser works best with sites that allow embedding.
+          ⚠️ Some websites block iframe viewing (security rule). This browser works best with embed-friendly sites.
         </div>
         <div class="browserbar">
           <button onclick="browserBack()">⟵</button>
@@ -500,14 +514,14 @@
       <div class="sidebar">
         <div class="card">
           <h4>School Notes</h4>
-          <p>Use this for homework, reminders, and study plans.</p>
+          <p>Homework + reminders.</p>
         </div>
         <button class="ghost" onclick="saveNotes()">Save Notes</button>
         <button class="ghost" onclick="clearNotes()">Clear</button>
         <div class="hr"></div>
         <div class="card">
           <h4>Templates</h4>
-          <p>One click starter notes.</p>
+          <p>Quick starter notes.</p>
         </div>
         <button class="ghost" onclick="template('homework')">Homework Template</button>
         <button class="ghost" onclick="template('study')">Study Plan</button>
@@ -541,11 +555,7 @@
       <div class="sidebar">
         <div class="card">
           <h4>Tips</h4>
-          <p>You can type: <b>2*(3+5)</b> or <b>12/4</b>.</p>
-        </div>
-        <div class="card">
-          <h4>School Tools</h4>
-          <p>Convert grades, calculate averages.</p>
+          <p>Type: <b>2*(3+5)</b> or <b>12/4</b>.</p>
         </div>
       </div>
       <div class="main">
@@ -566,12 +576,6 @@
           <button class="primary" onclick="calc()">Calculate</button>
           <button class="ghost" onclick="memStore()">Store</button>
           <button class="ghost" onclick="memClear()">Clear Mem</button>
-        </div>
-        <div class="hr"></div>
-        <div class="grid3">
-          <button class="ghost" onclick="quick('average')">Average</button>
-          <button class="ghost" onclick="quick('percent')">Percent</button>
-          <button class="ghost" onclick="quick('grade')">Grade</button>
         </div>
       </div>
     </div>
@@ -595,7 +599,7 @@
       <div class="sidebar">
         <div class="card">
           <h4>My Files</h4>
-          <p>This stores inside your browser using localStorage.</p>
+          <p>Stores in localStorage.</p>
         </div>
         <input id="fileName" placeholder="File name (example: math.txt)" />
         <button class="ghost" onclick="saveFile()">Save File</button>
@@ -623,7 +627,7 @@
         <div class="appdot">⚙</div>
         <div class="title">
           <h3>Settings</h3>
-          <div class="sub">Customize your OS</div>
+          <div class="sub">Themes + wallpaper</div>
         </div>
       </div>
       <div class="win-controls">
@@ -634,25 +638,52 @@
     <div class="content">
       <div class="sidebar">
         <div class="card">
-          <h4>Nebula Theme</h4>
-          <p>Change colors + school mode.</p>
+          <h4>Customize</h4>
+          <p>Theme + wallpaper + focus.</p>
         </div>
         <button class="ghost" onclick="toggleFocus()">Toggle Focus Mode</button>
         <button class="ghost" onclick="resetOS()">Reset OS</button>
       </div>
+
       <div class="main">
         <div class="kpi">
           <div class="big" id="focusState">Focus Mode: OFF</div>
-          <div class="label">Blocks distractions (visual + quick links)</div>
+          <div class="label">A clean school vibe.</div>
         </div>
+
         <div class="hr"></div>
+
         <div class="card">
-          <h4>Browser Home</h4>
-          <p class="small">Set what the browser opens first.</p>
-          <div class="row">
-            <input id="homeInput" placeholder="https://en.wikipedia.org" />
-            <button class="primary" onclick="saveHome()">Save</button>
+          <h4>Themes</h4>
+          <p class="small">Pick a Nebula theme.</p>
+          <div class="grid2">
+            <button class="ghost" onclick="applyTheme('nebulaDark')">Nebula Dark</button>
+            <button class="ghost" onclick="applyTheme('nebulaLight')">Nebula Light</button>
+            <button class="ghost" onclick="applyTheme('neon')">Neon</button>
+            <button class="ghost" onclick="applyTheme('spaceGray')">Space Gray</button>
           </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="card">
+          <h4>Wallpapers</h4>
+          <p class="small">Upload your own or pick a premade Nebulabs wallpaper.</p>
+
+          <div class="grid2">
+            <button class="ghost" onclick="setWallpaperPreset('nebula')">Nebula Default</button>
+            <button class="ghost" onclick="setWallpaperPreset('aurora')">Aurora Glow</button>
+            <button class="ghost" onclick="setWallpaperPreset('deepSpace')">Deep Space</button>
+            <button class="ghost" onclick="setWallpaperPreset('sunrise')">Sunrise</button>
+          </div>
+
+          <div style="height:10px"></div>
+
+          <input type="file" id="wallpaperUpload" accept="image/*" />
+          <div style="height:10px"></div>
+          <button class="primary" onclick="uploadWallpaper()">Import Wallpaper</button>
+          <div style="height:10px"></div>
+          <button class="ghost" onclick="resetWallpaper()">Reset Wallpaper</button>
         </div>
       </div>
     </div>
@@ -676,33 +707,23 @@
       <div class="sidebar">
         <div class="card">
           <h4>Nebula Education OS</h4>
-          <p>A school-focused “web OS” made in one HTML file.</p>
+          <p>A single-file “web OS” made for school.</p>
         </div>
         <div class="card">
-          <h4>Features</h4>
-          <p>Browser • Notes • Calculator • Files • Settings</p>
+          <h4>New Features</h4>
+          <p>Resizable windows • Themes • Wallpapers</p>
         </div>
       </div>
       <div class="main">
         <div class="card">
-          <h4>Welcome, Student 👽</h4>
+          <h4>Welcome 👽</h4>
           <p class="small">
-            This is a single-file OS-style website.
-            You can host it on GitHub Pages and use it as your Nebula Education OS.
+            Drag windows to move them.<br>
+            Drag the bottom-right corner to resize them.<br>
+            Use Settings to change theme + wallpaper.
           </p>
           <div class="hr"></div>
-          <div class="grid2">
-            <div class="kpi">
-              <div class="big">Nebula</div>
-              <div class="label">Education Edition</div>
-            </div>
-            <div class="kpi">
-              <div class="big" id="build">Build 1.0</div>
-              <div class="label">Single file</div>
-            </div>
-          </div>
-          <div class="hr"></div>
-          <button class="primary" onclick="openApp('browser')">Open Browser</button>
+          <button class="primary" onclick="openApp('settings')">Open Settings</button>
         </div>
       </div>
     </div>
@@ -756,45 +777,115 @@
       const cur = localStorage.getItem('nebula_focus') === '1';
       localStorage.setItem('nebula_focus', cur ? '0' : '1');
       refreshSettings();
-      // In focus mode, browser home defaults to Khan Academy
-      if(!cur){
-        localStorage.setItem('nebula_home', 'https://www.khanacademy.org');
-        if(document.getElementById('frame')) browse(getHome());
-      }
+      applyFocusClass();
     }
     function isFocus(){ return localStorage.getItem('nebula_focus') === '1'; }
+    function applyFocusClass(){
+      document.body.classList.toggle('focus', isFocus());
+    }
+
+    // themes
+    const THEMES = {
+      nebulaDark: {
+        "--bg1":"#050712",
+        "--bg2":"#0a1230",
+        "--text":"rgba(255,255,255,.92)",
+        "--muted":"rgba(255,255,255,.65)",
+        "--stroke":"rgba(255,255,255,.14)"
+      },
+      nebulaLight: {
+        "--bg1":"#dfe7ff",
+        "--bg2":"#a7c7ff",
+        "--text":"rgba(5,10,25,.92)",
+        "--muted":"rgba(5,10,25,.62)",
+        "--stroke":"rgba(5,10,25,.14)"
+      },
+      neon: {
+        "--bg1":"#02010a",
+        "--bg2":"#0b0020",
+        "--accent":"#ff3dff",
+        "--accent2":"#00e5ff",
+        "--text":"rgba(255,255,255,.92)",
+        "--muted":"rgba(255,255,255,.66)",
+        "--stroke":"rgba(255,255,255,.16)"
+      },
+      spaceGray: {
+        "--bg1":"#0a0c12",
+        "--bg2":"#161a24",
+        "--text":"rgba(255,255,255,.92)",
+        "--muted":"rgba(255,255,255,.65)",
+        "--stroke":"rgba(255,255,255,.12)"
+      }
+    };
+
+    function applyTheme(name){
+      const t = THEMES[name];
+      if(!t) return;
+      Object.entries(t).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
+      localStorage.setItem("nebula_theme", name);
+      // wallpaper stays, but default wallpaper uses bg vars so it updates too
+      if(!localStorage.getItem("nebula_wallpaper_custom")){
+        setWallpaperPreset("nebula");
+      }
+    }
+
+    // wallpapers
+    const WALLPAPERS = {
+      nebula: `radial-gradient(1200px 700px at 20% 15%, rgba(124,92,255,.25), transparent 60%),
+              radial-gradient(900px 600px at 80% 70%, rgba(0,229,255,.18), transparent 55%),
+              linear-gradient(160deg, var(--bg1), var(--bg2))`,
+      aurora: `radial-gradient(900px 600px at 20% 20%, rgba(45,255,136,.18), transparent 60%),
+              radial-gradient(900px 600px at 80% 70%, rgba(0,229,255,.18), transparent 60%),
+              radial-gradient(900px 600px at 60% 10%, rgba(124,92,255,.20), transparent 60%),
+              linear-gradient(160deg, var(--bg1), var(--bg2))`,
+      deepSpace: `radial-gradient(900px 600px at 70% 20%, rgba(255,77,109,.12), transparent 60%),
+                 radial-gradient(900px 600px at 20% 80%, rgba(124,92,255,.18), transparent 60%),
+                 linear-gradient(160deg, #00020a, #050a1a)`,
+      sunrise: `radial-gradient(900px 600px at 20% 80%, rgba(255,204,0,.18), transparent 60%),
+               radial-gradient(900px 600px at 80% 20%, rgba(255,77,109,.16), transparent 60%),
+               linear-gradient(160deg, #061024, #0a1a44)`
+    };
+
+    function setWallpaperPreset(name){
+      const wp = WALLPAPERS[name];
+      if(!wp) return;
+      document.documentElement.style.setProperty("--wallpaper", wp);
+      localStorage.setItem("nebula_wallpaper_preset", name);
+      localStorage.removeItem("nebula_wallpaper_custom");
+    }
+
+    function uploadWallpaper(){
+      const file = document.getElementById("wallpaperUpload").files[0];
+      if(!file){ alert("Pick an image first."); return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        document.documentElement.style.setProperty("--wallpaper", `url('${dataUrl}') center/cover no-repeat`);
+        localStorage.setItem("nebula_wallpaper_custom", dataUrl);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function resetWallpaper(){
+      localStorage.removeItem("nebula_wallpaper_custom");
+      localStorage.setItem("nebula_wallpaper_preset", "nebula");
+      setWallpaperPreset("nebula");
+    }
 
     function refreshSettings(){
       const state = document.getElementById('focusState');
       if(state) state.textContent = `Focus Mode: ${isFocus() ? 'ON' : 'OFF'}`;
-      const homeInput = document.getElementById('homeInput');
-      if(homeInput) homeInput.value = getHome();
     }
 
     function resetOS(){
       if(confirm("Reset Nebula Education OS? This clears notes + files + settings.")){
-        localStorage.removeItem('nebula_notes');
-        localStorage.removeItem('nebula_files');
-        localStorage.removeItem('nebula_home');
-        localStorage.removeItem('nebula_focus');
+        localStorage.clear();
         alert("Reset complete!");
         location.reload();
       }
     }
 
     // browser
-    function getHome(){
-      return localStorage.getItem('nebula_home') || 'https://en.wikipedia.org';
-    }
-    function setBrowserHome(){
-      openApp('settings');
-    }
-    function saveHome(){
-      const v = document.getElementById('homeInput').value.trim();
-      if(!v) return;
-      localStorage.setItem('nebula_home', normalizeUrl(v));
-      alert("Saved home page!");
-    }
     function normalizeUrl(u){
       if(!u.startsWith('http://') && !u.startsWith('https://')){
         return 'https://' + u;
@@ -874,7 +965,7 @@ Topics:
 What I need help with:
 - `;
       }
-      saveNotes();
+      localStorage.setItem('nebula_notes', document.getElementById('notes').value);
     }
 
     // calculator
@@ -883,7 +974,6 @@ What I need help with:
       const input = document.getElementById('calcIn').value.trim();
       if(!input){ return; }
       try{
-        // basic safe eval (numbers/operators only)
         if(!/^[0-9+\-*/(). %]+$/.test(input)) throw new Error("Invalid characters");
         const result = Function("return (" + input + ")")();
         document.getElementById('calcOut').textContent = String(result);
@@ -900,18 +990,8 @@ What I need help with:
       memory = null;
       document.getElementById('calcMem').textContent = "—";
     }
-    function quick(mode){
-      if(mode === 'average'){
-        document.getElementById('calcIn').value = "(90+85+100)/3";
-      }else if(mode === 'percent'){
-        document.getElementById('calcIn').value = "25/100*80";
-      }else if(mode === 'grade'){
-        document.getElementById('calcIn').value = "87";
-      }
-      calc();
-    }
 
-    // files (localStorage)
+    // files
     function getFiles(){
       return JSON.parse(localStorage.getItem('nebula_files') || "{}");
     }
@@ -996,16 +1076,26 @@ What I need help with:
       document.removeEventListener('mouseup', dragEnd);
     }
 
-    // boot defaults
+    // boot
     (function init(){
-      // open browser on first load
-      if(!localStorage.getItem('nebula_home')){
-        localStorage.setItem('nebula_home', 'https://en.wikipedia.org');
+      applyFocusClass();
+
+      // theme restore
+      const savedTheme = localStorage.getItem("nebula_theme") || "nebulaDark";
+      applyTheme(savedTheme);
+
+      // wallpaper restore
+      const custom = localStorage.getItem("nebula_wallpaper_custom");
+      if(custom){
+        document.documentElement.style.setProperty("--wallpaper", `url('${custom}') center/cover no-repeat`);
+      } else {
+        setWallpaperPreset(localStorage.getItem("nebula_wallpaper_preset") || "nebula");
       }
-      document.getElementById('frame').src = getHome();
+
+      document.getElementById('frame').src = "https://en.wikipedia.org";
       openApp('about');
-      refreshSettings();
     })();
   </script>
 </body>
 </html>
+
