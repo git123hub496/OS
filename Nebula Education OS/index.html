@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nebula Education OS</title>
+  <style>
+    :root{
+      --bg1:#050712;
+      --bg2:#0a1230;
+      --glass: rgba(255,255,255,.08);
+      --glass2: rgba(255,255,255,.12);
+      --stroke: rgba(255,255,255,.14);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.65);
+      --accent:#7c5cff;
+      --accent2:#00e5ff;
+      --good:#2dff88;
+      --warn:#ffcc00;
+      --bad:#ff4d6d;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;}
+    body{
+      color:var(--text);
+      overflow:hidden;
+      background:
+        radial-gradient(1200px 700px at 20% 15%, rgba(124,92,255,.25), transparent 60%),
+        radial-gradient(900px 600px at 80% 70%, rgba(0,229,255,.18), transparent 55%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+    }
+
+    /* stars */
+    .stars{
+      position:fixed; inset:0; pointer-events:none; opacity:.6;
+      background-image:
+        radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,.6), transparent 60%),
+        radial-gradient(1px 1px at 120px 80px, rgba(255,255,255,.55), transparent 60%),
+        radial-gradient(1px 1px at 260px 140px, rgba(255,255,255,.45), transparent 60%),
+        radial-gradient(1px 1px at 520px 240px, rgba(255,255,255,.5), transparent 60%),
+        radial-gradient(1px 1px at 820px 420px, rgba(255,255,255,.55), transparent 60%),
+        radial-gradient(1px 1px at 980px 160px, rgba(255,255,255,.45), transparent 60%),
+        radial-gradient(1px 1px at 1120px 620px, rgba(255,255,255,.55), transparent 60%);
+      background-size: 1200px 700px;
+      filter: blur(.2px);
+      animation: drift 30s linear infinite;
+    }
+    @keyframes drift{
+      0%{transform:translate3d(0,0,0)}
+      100%{transform:translate3d(-40px,20px,0)}
+    }
+
+    /* desktop */
+    #desktop{
+      position:fixed; inset:0;
+      padding:18px;
+    }
+
+    .desktop-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap:14px;
+      max-width:620px;
+      padding-top:8px;
+    }
+
+    .icon{
+      user-select:none;
+      cursor:pointer;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid transparent;
+      transition:.15s ease;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      background: rgba(0,0,0,.12);
+      backdrop-filter: blur(10px);
+    }
+    .icon:hover{
+      border-color: var(--stroke);
+      background: rgba(255,255,255,.08);
+      transform: translateY(-1px);
+    }
+    .badge{
+      width:38px;height:38px;border-radius:14px;
+      display:grid;place-items:center;
+      background: linear-gradient(135deg, rgba(124,92,255,.9), rgba(0,229,255,.6));
+      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+      font-weight:800;
+    }
+    .icon .name{font-weight:700}
+    .icon .desc{font-size:12px;color:var(--muted);margin-top:2px}
+
+    /* taskbar */
+    #taskbar{
+      position:fixed; left:50%; bottom:14px; transform:translateX(-50%);
+      width:min(1000px, calc(100% - 26px));
+      border:1px solid var(--stroke);
+      border-radius: 22px;
+      padding:10px 12px;
+      background: rgba(0,0,0,.22);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+    }
+    .tb-left,.tb-right{display:flex;align-items:center;gap:10px}
+    .pill{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:700;
+      cursor:pointer;
+      user-select:none;
+      transition:.15s;
+      display:flex; align-items:center; gap:10px;
+    }
+    .pill:hover{background: rgba(255,255,255,.10)}
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--good);box-shadow:0 0 18px rgba(45,255,136,.55)}
+    .time{font-variant-numeric: tabular-nums;}
+    .small{font-size:12px;color:var(--muted);font-weight:600}
+
+    /* windows */
+    .window{
+      position:absolute;
+      width: min(920px, calc(100% - 40px));
+      height: min(620px, calc(100% - 120px));
+      left:50%; top:50%; transform:translate(-50%,-50%);
+      border-radius: var(--radius);
+      border:1px solid var(--stroke);
+      background: rgba(10,16,40,.55);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:none;
+    }
+    .window.active{display:block;}
+    .titlebar{
+      height:50px;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 12px;
+      background: rgba(0,0,0,.22);
+      border-bottom:1px solid rgba(255,255,255,.10);
+      cursor:grab;
+    }
+    .titlebar:active{cursor:grabbing}
+    .title-left{display:flex;align-items:center;gap:10px}
+    .appdot{
+      width:34px;height:34px;border-radius:12px;
+      display:grid;place-items:center;
+      background: linear-gradient(135deg, rgba(124,92,255,.9), rgba(0,229,255,.55));
+      font-weight:900;
+    }
+    .title h3{margin:0;font-size:14px}
+    .title .sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .win-controls{display:flex;gap:8px}
+    .btn{
+      width:34px;height:34px;border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      transition:.15s;
+      font-weight:900;
+    }
+    .btn:hover{background: rgba(255,255,255,.12)}
+    .btn.close:hover{background: rgba(255,77,109,.25); border-color: rgba(255,77,109,.4)}
+    .content{
+      height: calc(100% - 50px);
+      display:flex;
+    }
+
+    /* sidebar */
+    .sidebar{
+      width:260px;
+      border-right:1px solid rgba(255,255,255,.10);
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      background: rgba(0,0,0,.16);
+    }
+    .card{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      border-radius:16px;
+      padding:12px;
+    }
+    .card h4{margin:0 0 6px 0;font-size:13px}
+    .card p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}
+
+    .main{
+      flex:1;
+      padding:14px;
+      overflow:auto;
+    }
+
+    input,textarea,select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      color:var(--text);
+      outline:none;
+    }
+    textarea{min-height:220px;resize:vertical}
+    .row{display:flex;gap:10px;align-items:center}
+    .row > *{flex:1}
+    .primary{
+      border:none;
+      background: linear-gradient(135deg, rgba(124,92,255,1), rgba(0,229,255,.8));
+      color:#081024;
+      font-weight:900;
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+    }
+    .ghost{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      font-weight:800;
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+    }
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .kpi{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+    }
+    .kpi .big{font-size:22px;font-weight:1000}
+    .kpi .label{font-size:12px;color:var(--muted);margin-top:2px}
+    .hr{height:1px;background: rgba(255,255,255,.10); margin:12px 0}
+
+    /* browser */
+    .browserbar{display:flex;gap:10px;margin-bottom:10px}
+    .browserbar button{
+      width:42px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:900;
+    }
+    iframe{
+      width:100%;
+      height: calc(100% - 52px);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      background: rgba(0,0,0,.2);
+    }
+    .notice{
+      font-size:12px;
+      color:rgba(255,255,255,.72);
+      padding:10px 12px;
+      border:1px dashed rgba(255,255,255,.18);
+      border-radius:16px;
+      background: rgba(0,0,0,.14);
+      margin-bottom:10px;
+    }
+
+    /* start menu */
+    #startMenu{
+      position:fixed;
+      left:50%;
+      bottom:76px;
+      transform:translateX(-50%);
+      width:min(900px, calc(100% - 26px));
+      border-radius:22px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.30);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      padding:14px;
+      display:none;
+    }
+    #startMenu.open{display:block}
+    .startGrid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:12px;
+    }
+    .appGrid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    .appTile{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      padding:12px;
+      cursor:pointer;
+      user-select:none;
+      transition:.15s;
+    }
+    .appTile:hover{transform: translateY(-1px); background: rgba(255,255,255,.10)}
+    .appTile .t{font-weight:900}
+    .appTile .s{font-size:12px;color:var(--muted);margin-top:2px}
+  </style>
+</head>
+
+<body>
+  <div class="stars"></div>
+
+  <div id="desktop">
+    <div class="desktop-grid">
+      <div class="icon" onclick="openApp('browser')">
+        <div class="badge">N</div>
+        <div>
+          <div class="name">Nebula Browser</div>
+          <div class="desc">Study-safe browsing</div>
+        </div>
+      </div>
+
+      <div class="icon" onclick="openApp('notes')">
+        <div class="badge">✎</div>
+        <div>
+          <div class="name">Notes</div>
+          <div class="desc">Homework + ideas</div>
+        </div>
+      </div>
+
+      <div class="icon" onclick="openApp('calculator')">
+        <div class="badge">÷</div>
+        <div>
+          <div class="name">Calculator</div>
+          <div class="desc">Math helper</div>
+        </div>
+      </div>
+
+      <div class="icon" onclick="openApp('files')">
+        <div class="badge">⌁</div>
+        <div>
+          <div class="name">Files</div>
+          <div class="desc">Local storage demo</div>
+        </div>
+      </div>
+
+      <div class="icon" onclick="openApp('settings')">
+        <div class="badge">⚙</div>
+        <div>
+          <div class="name">Settings</div>
+          <div class="desc">Customize Nebula</div>
+        </div>
+      </div>
+
+      <div class="icon" onclick="openApp('about')">
+        <div class="badge">★</div>
+        <div>
+          <div class="name">About</div>
+          <div class="desc">Nebula Education OS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- START MENU -->
+  <div id="startMenu">
+    <div class="startGrid">
+      <div class="card">
+        <h4>Apps</h4>
+        <div class="appGrid">
+          <div class="appTile" onclick="openApp('browser')">
+            <div class="t">Nebula Browser</div>
+            <div class="s">Open websites</div>
+          </div>
+          <div class="appTile" onclick="openApp('notes')">
+            <div class="t">Notes</div>
+            <div class="s">Save homework</div>
+          </div>
+          <div class="appTile" onclick="openApp('calculator')">
+            <div class="t">Calculator</div>
+            <div class="s">Quick math</div>
+          </div>
+          <div class="appTile" onclick="openApp('files')">
+            <div class="t">Files</div>
+            <div class="s">LocalStorage files</div>
+          </div>
+          <div class="appTile" onclick="openApp('settings')">
+            <div class="t">Settings</div>
+            <div class="s">Themes + options</div>
+          </div>
+          <div class="appTile" onclick="openApp('about')">
+            <div class="t">About</div>
+            <div class="s">Info + credits</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h4>Quick Actions</h4>
+        <p class="small">School mode, focus, and shortcuts.</p>
+        <div class="hr"></div>
+        <button class="ghost" onclick="toggleFocus()">Toggle Focus Mode</button>
+        <div style="height:10px"></div>
+        <button class="ghost" onclick="setBrowserHome()">Set Browser Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASKBAR -->
+  <div id="taskbar">
+    <div class="tb-left">
+      <div class="pill" onclick="toggleStart()">
+        <span class="dot"></span>
+        <span>Nebula</span>
+      </div>
+
+      <div class="pill" onclick="openApp('browser')">🌐</div>
+      <div class="pill" onclick="openApp('notes')">✎</div>
+      <div class="pill" onclick="openApp('calculator')">÷</div>
+      <div class="pill" onclick="openApp('files')">⌁</div>
+      <div class="pill" onclick="openApp('settings')">⚙</div>
+    </div>
+
+    <div class="tb-right">
+      <div class="pill">
+        <div>
+          <div class="time" id="clock">--:--</div>
+          <div class="small" id="date">---</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WINDOWS -->
+  <div id="win-browser" class="window">
+    <div class="titlebar" onmousedown="dragStart(event, 'win-browser')">
+      <div class="title-left">
+        <div class="appdot">N</div>
+        <div class="title">
+          <h3>Nebula Browser</h3>
+          <div class="sub">Education mode browsing</div>
+        </div>
+      </div>
+      <div class="win-controls">
+        <button class="btn" onclick="minimize('win-browser')">—</button>
+        <button class="btn close" onclick="closeApp('win-browser')">✕</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="sidebar">
+        <div class="card">
+          <h4>Safe Study Links</h4>
+          <p>Quick launch school-friendly sites.</p>
+        </div>
+        <button class="ghost" onclick="browse('https://www.khanacademy.org')">Khan Academy</button>
+        <button class="ghost" onclick="browse('https://en.wikipedia.org')">Wikipedia</button>
+        <button class="ghost" onclick="browse('https://www.duckduckgo.com')">DuckDuckGo</button>
+        <button class="ghost" onclick="browse('https://www.britannica.com')">Britannica</button>
+        <button class="ghost" onclick="browse(getHome())">Home Page</button>
+        <div class="hr"></div>
+        <div class="card">
+          <h4>Tip</h4>
+          <p>Some websites block loading inside an iframe. If it’s blank, try another site.</p>
+        </div>
+      </div>
+      <div class="main">
+        <div class="notice">
+          ⚠️ Some websites do not allow iframe viewing (security rule). This browser works best with sites that allow embedding.
+        </div>
+        <div class="browserbar">
+          <button onclick="browserBack()">⟵</button>
+          <button onclick="browserForward()">⟶</button>
+          <button onclick="browserReload()">⟳</button>
+          <input id="url" placeholder="Enter URL (example: https://en.wikipedia.org)" />
+          <button class="primary" onclick="go()">Go</button>
+        </div>
+        <iframe id="frame" src="https://en.wikipedia.org"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div id="win-notes" class="window">
+    <div class="titlebar" onmousedown="dragStart(event, 'win-notes')">
+      <div class="title-left">
+        <div class="appdot">✎</div>
+        <div class="title">
+          <h3>Notes</h3>
+          <div class="sub">Saved automatically</div>
+        </div>
+      </div>
+      <div class="win-controls">
+        <button class="btn" onclick="minimize('win-notes')">—</button>
+        <button class="btn close" onclick="closeApp('win-notes')">✕</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="sidebar">
+        <div class="card">
+          <h4>School Notes</h4>
+          <p>Use this for homework, reminders, and study plans.</p>
+        </div>
+        <button class="ghost" onclick="saveNotes()">Save Notes</button>
+        <button class="ghost" onclick="clearNotes()">Clear</button>
+        <div class="hr"></div>
+        <div class="card">
+          <h4>Templates</h4>
+          <p>One click starter notes.</p>
+        </div>
+        <button class="ghost" onclick="template('homework')">Homework Template</button>
+        <button class="ghost" onclick="template('study')">Study Plan</button>
+      </div>
+      <div class="main">
+        <textarea id="notes" placeholder="Type notes here..."></textarea>
+        <div style="height:10px"></div>
+        <div class="row">
+          <button class="primary" onclick="saveNotes()">Save</button>
+          <button class="ghost" onclick="exportNotes()">Export .txt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="win-calculator" class="window">
+    <div class="titlebar" onmousedown="dragStart(event, 'win-calculator')">
+      <div class="title-left">
+        <div class="appdot">÷</div>
+        <div class="title">
+          <h3>Calculator</h3>
+          <div class="sub">Quick math helper</div>
+        </div>
+      </div>
+      <div class="win-controls">
+        <button class="btn" onclick="minimize('win-calculator')">—</button>
+        <button class="btn close" onclick="closeApp('win-calculator')">✕</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="sidebar">
+        <div class="card">
+          <h4>Tips</h4>
+          <p>You can type: <b>2*(3+5)</b> or <b>12/4</b>.</p>
+        </div>
+        <div class="card">
+          <h4>School Tools</h4>
+          <p>Convert grades, calculate averages.</p>
+        </div>
+      </div>
+      <div class="main">
+        <div class="grid2">
+          <div class="kpi">
+            <div class="big" id="calcOut">0</div>
+            <div class="label">Result</div>
+          </div>
+          <div class="kpi">
+            <div class="big" id="calcMem">—</div>
+            <div class="label">Memory</div>
+          </div>
+        </div>
+        <div style="height:10px"></div>
+        <input id="calcIn" placeholder="Type math expression... e.g. (8+2)*5" />
+        <div style="height:10px"></div>
+        <div class="row">
+          <button class="primary" onclick="calc()">Calculate</button>
+          <button class="ghost" onclick="memStore()">Store</button>
+          <button class="ghost" onclick="memClear()">Clear Mem</button>
+        </div>
+        <div class="hr"></div>
+        <div class="grid3">
+          <button class="ghost" onclick="quick('average')">Average</button>
+          <button class="ghost" onclick="quick('percent')">Percent</button>
+          <button class="ghost" onclick="quick('grade')">Grade</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="win-files" class="window">
+    <div class="titlebar" onmousedown="dragStart(event, 'win-files')">
+      <div class="title-left">
+        <div class="appdot">⌁</div>
+        <div class="title">
+          <h3>Files</h3>
+          <div class="sub">Local storage (demo)</div>
+        </div>
+      </div>
+      <div class="win-controls">
+        <button class="btn" onclick="minimize('win-files')">—</button>
+        <button class="btn close" onclick="closeApp('win-files')">✕</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="sidebar">
+        <div class="card">
+          <h4>My Files</h4>
+          <p>This stores inside your browser using localStorage.</p>
+        </div>
+        <input id="fileName" placeholder="File name (example: math.txt)" />
+        <button class="ghost" onclick="saveFile()">Save File</button>
+        <button class="ghost" onclick="newFile()">New File</button>
+        <button class="ghost" onclick="deleteFile()">Delete File</button>
+      </div>
+      <div class="main">
+        <div class="grid2">
+          <div class="card">
+            <h4>File List</h4>
+            <select id="fileList" size="8" onchange="loadFile()"></select>
+          </div>
+          <div class="card">
+            <h4>Preview / Edit</h4>
+            <textarea id="fileContent" placeholder="File contents..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="win-settings" class="window">
+    <div class="titlebar" onmousedown="dragStart(event, 'win-settings')">
+      <div class="title-left">
+        <div class="appdot">⚙</div>
+        <div class="title">
+          <h3>Settings</h3>
+          <div class="sub">Customize your OS</div>
+        </div>
+      </div>
+      <div class="win-controls">
+        <button class="btn" onclick="minimize('win-settings')">—</button>
+        <button class="btn close" onclick="closeApp('win-settings')">✕</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="sidebar">
+        <div class="card">
+          <h4>Nebula Theme</h4>
+          <p>Change colors + school mode.</p>
+        </div>
+        <button class="ghost" onclick="toggleFocus()">Toggle Focus Mode</button>
+        <button class="ghost" onclick="resetOS()">Reset OS</button>
+      </div>
+      <div class="main">
+        <div class="kpi">
+          <div class="big" id="focusState">Focus Mode: OFF</div>
+          <div class="label">Blocks distractions (visual + quick links)</div>
+        </div>
+        <div class="hr"></div>
+        <div class="card">
+          <h4>Browser Home</h4>
+          <p class="small">Set what the browser opens first.</p>
+          <div class="row">
+            <input id="homeInput" placeholder="https://en.wikipedia.org" />
+            <button class="primary" onclick="saveHome()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="win-about" class="window">
+    <div class="titlebar" onmousedown="dragStart(event, 'win-about')">
+      <div class="title-left">
+        <div class="appdot">★</div>
+        <div class="title">
+          <h3>About</h3>
+          <div class="sub">Nebula Education OS</div>
+        </div>
+      </div>
+      <div class="win-controls">
+        <button class="btn" onclick="minimize('win-about')">—</button>
+        <button class="btn close" onclick="closeApp('win-about')">✕</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="sidebar">
+        <div class="card">
+          <h4>Nebula Education OS</h4>
+          <p>A school-focused “web OS” made in one HTML file.</p>
+        </div>
+        <div class="card">
+          <h4>Features</h4>
+          <p>Browser • Notes • Calculator • Files • Settings</p>
+        </div>
+      </div>
+      <div class="main">
+        <div class="card">
+          <h4>Welcome, Student 👽</h4>
+          <p class="small">
+            This is a single-file OS-style website.
+            You can host it on GitHub Pages and use it as your Nebula Education OS.
+          </p>
+          <div class="hr"></div>
+          <div class="grid2">
+            <div class="kpi">
+              <div class="big">Nebula</div>
+              <div class="label">Education Edition</div>
+            </div>
+            <div class="kpi">
+              <div class="big" id="build">Build 1.0</div>
+              <div class="label">Single file</div>
+            </div>
+          </div>
+          <div class="hr"></div>
+          <button class="primary" onclick="openApp('browser')">Open Browser</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // clock
+    function updateClock(){
+      const d = new Date();
+      const h = String(d.getHours()).padStart(2,'0');
+      const m = String(d.getMinutes()).padStart(2,'0');
+      document.getElementById('clock').textContent = `${h}:${m}`;
+      document.getElementById('date').textContent = d.toDateString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // start menu
+    function toggleStart(){
+      document.getElementById('startMenu').classList.toggle('open');
+    }
+    document.addEventListener('click', (e)=>{
+      const menu = document.getElementById('startMenu');
+      const tb = document.getElementById('taskbar');
+      if(!menu.contains(e.target) && !tb.contains(e.target)){
+        menu.classList.remove('open');
+      }
+    });
+
+    // window open/close
+    function openApp(app){
+      document.getElementById('startMenu').classList.remove('open');
+      const id = `win-${app}`;
+      const w = document.getElementById(id);
+      w.classList.add('active');
+      bringToFront(w);
+      if(app === 'files') refreshFileList();
+      if(app === 'settings') refreshSettings();
+      if(app === 'notes') loadNotes();
+      if(app === 'browser') document.getElementById('url').value = document.getElementById('frame').src;
+    }
+    function closeApp(id){
+      document.getElementById(id).classList.remove('active');
+    }
+    function minimize(id){
+      document.getElementById(id).classList.remove('active');
+    }
+
+    // focus mode
+    function toggleFocus(){
+      const cur = localStorage.getItem('nebula_focus') === '1';
+      localStorage.setItem('nebula_focus', cur ? '0' : '1');
+      refreshSettings();
+      // In focus mode, browser home defaults to Khan Academy
+      if(!cur){
+        localStorage.setItem('nebula_home', 'https://www.khanacademy.org');
+        if(document.getElementById('frame')) browse(getHome());
+      }
+    }
+    function isFocus(){ return localStorage.getItem('nebula_focus') === '1'; }
+
+    function refreshSettings(){
+      const state = document.getElementById('focusState');
+      if(state) state.textContent = `Focus Mode: ${isFocus() ? 'ON' : 'OFF'}`;
+      const homeInput = document.getElementById('homeInput');
+      if(homeInput) homeInput.value = getHome();
+    }
+
+    function resetOS(){
+      if(confirm("Reset Nebula Education OS? This clears notes + files + settings.")){
+        localStorage.removeItem('nebula_notes');
+        localStorage.removeItem('nebula_files');
+        localStorage.removeItem('nebula_home');
+        localStorage.removeItem('nebula_focus');
+        alert("Reset complete!");
+        location.reload();
+      }
+    }
+
+    // browser
+    function getHome(){
+      return localStorage.getItem('nebula_home') || 'https://en.wikipedia.org';
+    }
+    function setBrowserHome(){
+      openApp('settings');
+    }
+    function saveHome(){
+      const v = document.getElementById('homeInput').value.trim();
+      if(!v) return;
+      localStorage.setItem('nebula_home', normalizeUrl(v));
+      alert("Saved home page!");
+    }
+    function normalizeUrl(u){
+      if(!u.startsWith('http://') && !u.startsWith('https://')){
+        return 'https://' + u;
+      }
+      return u;
+    }
+    function go(){
+      const url = document.getElementById('url').value.trim();
+      browse(url);
+    }
+    function browse(url){
+      const frame = document.getElementById('frame');
+      const fixed = normalizeUrl(url);
+      document.getElementById('url').value = fixed;
+      frame.src = fixed;
+    }
+    function browserBack(){
+      try{ document.getElementById('frame').contentWindow.history.back(); }
+      catch(e){ alert("This site blocks iframe navigation. Try using Go with a new URL."); }
+    }
+    function browserForward(){
+      try{ document.getElementById('frame').contentWindow.history.forward(); }
+      catch(e){ alert("This site blocks iframe navigation. Try using Go with a new URL."); }
+    }
+    function browserReload(){
+      const f = document.getElementById('frame');
+      f.src = f.src;
+    }
+
+    // notes
+    function saveNotes(){
+      const v = document.getElementById('notes').value;
+      localStorage.setItem('nebula_notes', v);
+      alert("Saved!");
+    }
+    function loadNotes(){
+      document.getElementById('notes').value = localStorage.getItem('nebula_notes') || "";
+    }
+    function clearNotes(){
+      if(confirm("Clear notes?")){
+        document.getElementById('notes').value = "";
+        saveNotes();
+      }
+    }
+    function exportNotes(){
+      const text = document.getElementById('notes').value;
+      const blob = new Blob([text], {type:"text/plain"});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = "nebula-notes.txt";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+    function template(kind){
+      if(kind === 'homework'){
+        document.getElementById('notes').value =
+`Homework Checklist
+- Subject:
+- Due Date:
+- Tasks:
+  1)
+  2)
+  3)
+
+Notes:
+- `;
+      } else if(kind === 'study'){
+        document.getElementById('notes').value =
+`Study Plan
+Goal:
+Time:
+Topics:
+- Topic 1:
+- Topic 2:
+- Topic 3:
+
+What I need help with:
+- `;
+      }
+      saveNotes();
+    }
+
+    // calculator
+    let memory = null;
+    function calc(){
+      const input = document.getElementById('calcIn').value.trim();
+      if(!input){ return; }
+      try{
+        // basic safe eval (numbers/operators only)
+        if(!/^[0-9+\-*/(). %]+$/.test(input)) throw new Error("Invalid characters");
+        const result = Function("return (" + input + ")")();
+        document.getElementById('calcOut').textContent = String(result);
+      }catch(e){
+        document.getElementById('calcOut').textContent = "Error";
+      }
+    }
+    function memStore(){
+      const v = document.getElementById('calcOut').textContent;
+      memory = v;
+      document.getElementById('calcMem').textContent = v;
+    }
+    function memClear(){
+      memory = null;
+      document.getElementById('calcMem').textContent = "—";
+    }
+    function quick(mode){
+      if(mode === 'average'){
+        document.getElementById('calcIn').value = "(90+85+100)/3";
+      }else if(mode === 'percent'){
+        document.getElementById('calcIn').value = "25/100*80";
+      }else if(mode === 'grade'){
+        document.getElementById('calcIn').value = "87";
+      }
+      calc();
+    }
+
+    // files (localStorage)
+    function getFiles(){
+      return JSON.parse(localStorage.getItem('nebula_files') || "{}");
+    }
+    function setFiles(obj){
+      localStorage.setItem('nebula_files', JSON.stringify(obj));
+    }
+    function refreshFileList(){
+      const files = getFiles();
+      const list = document.getElementById('fileList');
+      list.innerHTML = "";
+      Object.keys(files).sort().forEach(name=>{
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        list.appendChild(opt);
+      });
+    }
+    function saveFile(){
+      const name = document.getElementById('fileName').value.trim();
+      const content = document.getElementById('fileContent').value;
+      if(!name){ alert("Enter a file name."); return; }
+      const files = getFiles();
+      files[name] = content;
+      setFiles(files);
+      refreshFileList();
+      alert("File saved!");
+    }
+    function loadFile(){
+      const list = document.getElementById('fileList');
+      const name = list.value;
+      const files = getFiles();
+      document.getElementById('fileName').value = name || "";
+      document.getElementById('fileContent').value = files[name] || "";
+    }
+    function newFile(){
+      document.getElementById('fileName').value = "";
+      document.getElementById('fileContent').value = "";
+    }
+    function deleteFile(){
+      const list = document.getElementById('fileList');
+      const name = list.value || document.getElementById('fileName').value.trim();
+      if(!name){ return; }
+      if(confirm("Delete file: " + name + " ?")){
+        const files = getFiles();
+        delete files[name];
+        setFiles(files);
+        refreshFileList();
+        newFile();
+      }
+    }
+
+    // draggable windows
+    let drag = { active:false, id:null, offsetX:0, offsetY:0 };
+
+    function bringToFront(win){
+      const all = [...document.querySelectorAll('.window')];
+      all.forEach(w=>w.style.zIndex = 10);
+      win.style.zIndex = 99;
+    }
+
+    function dragStart(e, id){
+      const win = document.getElementById(id);
+      bringToFront(win);
+      drag.active = true;
+      drag.id = id;
+      const rect = win.getBoundingClientRect();
+      drag.offsetX = e.clientX - rect.left;
+      drag.offsetY = e.clientY - rect.top;
+      document.addEventListener('mousemove', dragMove);
+      document.addEventListener('mouseup', dragEnd);
+    }
+    function dragMove(e){
+      if(!drag.active) return;
+      const win = document.getElementById(drag.id);
+      win.style.left = e.clientX - drag.offsetX + "px";
+      win.style.top = e.clientY - drag.offsetY + "px";
+      win.style.transform = "translate(0,0)";
+    }
+    function dragEnd(){
+      drag.active = false;
+      document.removeEventListener('mousemove', dragMove);
+      document.removeEventListener('mouseup', dragEnd);
+    }
+
+    // boot defaults
+    (function init(){
+      // open browser on first load
+      if(!localStorage.getItem('nebula_home')){
+        localStorage.setItem('nebula_home', 'https://en.wikipedia.org');
+      }
+      document.getElementById('frame').src = getHome();
+      openApp('about');
+      refreshSettings();
+    })();
+  </script>
+</body>
+</html>
